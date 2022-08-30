@@ -1,9 +1,20 @@
 {
   "dbConfig": {
-    "username": "sadsadas",
-    "passowrd": "sadsa",
-    "database": "asdasdasd"
-  },
-
-  "swaggerConfig": {}
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "username": "cas",
+    "password": "GQBjzJdepmwA9ty",
+    "database": "cas",
+    "synchronize": true,
+    "logging": false,
+    "entities": ["src/entity/**/*"],
+    "migrations": ["src/migration/**/*"],
+    "subscribers": ["src/subscriber/**/*"],
+    "cli": {
+      "entitiesDir": "src/entity",
+      "migrationsDir": "src/migration",
+      "subscribersDir": "src/subscriber"
+    }
+  }
 }

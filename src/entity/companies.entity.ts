@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   ManyToOne,
 } from "typeorm";
+import { Category } from "./category.entity";
 
 export enum CompanyStatus {
   PENDING = "Pending",
@@ -35,8 +36,8 @@ export class Company extends BaseEntity {
   @Column()
   tin: string;
 
-  @Column()
-  category: string;
+  @ManyToOne(() => Category, (category) => category.users)
+  category: Category;
 
   @Column({
     enum: CompanyStatus,

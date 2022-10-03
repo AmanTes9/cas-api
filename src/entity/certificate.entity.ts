@@ -6,7 +6,7 @@ import {
   CreateDateColumn,
   ManyToOne,
 } from "typeorm";
-import { Certificate_Provider } from "./certificate_provider.entity";
+import { Institutions } from "./companies.entity";
 
 export enum CompanyStatus {
   PENDING = "Pending",
@@ -16,7 +16,7 @@ export enum CompanyStatus {
 
 @Entity()
 export class User_Certificate extends BaseEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn("uuid")
   id: number;
 
   @Column({
@@ -24,8 +24,8 @@ export class User_Certificate extends BaseEntity {
   })
   certificate_name: string;
 
-  @ManyToOne(() => Certificate_Provider, (provider) => provider.certificates)
-  provider: Certificate_Provider
+  @ManyToOne(() => Institutions, (provider) => provider.certificates)
+  provider: Institutions;
 
   @Column({
     nullable: false,
@@ -36,13 +36,14 @@ export class User_Certificate extends BaseEntity {
   certificate_type: string;
 
   @Column()
-  issued_date: string;
+  description: string;
 
   @Column()
-  certificate_uid: string;
+  image: string;
+
+  @Column()
+  issued_date: string;
 
   @CreateDateColumn()
   created_at: Date;
-
-
 }

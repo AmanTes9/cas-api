@@ -2,11 +2,18 @@ import { Routes } from "./../routes";
 import * as express from "express";
 import fileUpload from "express-fileupload";
 import path from "path";
-import { sendSuccess } from "../utils/response..util";
-import { Company, CompanyStatus } from "../entity/companies.entity";
+
+import * as bcrypt from "bcrypt";
+import { sendBadRequest, sendSuccess } from "../utils/response..util";
+import { Institutions, CompanyStatus } from "../entity/companies.entity";
 import { FileUploadMiddleware } from "../middlewares/upload/fileupload.middelware";
+import { CompanyRouter } from "./company";
+import { RoleEnum, User } from "../entity/user.entity";
+import { AdminRouter } from "./admin";
+import { authMiddlewareChecker } from "../middlewares/authentication/isAuthorized.middleware";
 const router = express.Router();
 
+var jwt = require("jsonwebtoken");
 // File Upload middleware registration
 router.use(
   fileUpload({
@@ -20,45 +27,42 @@ router.use(Routes.config.imagePath, express.static(uploadPath));
 router.get("/", (req, res) => {
   sendSuccess(res, "APP Base Route");
 });
+
+router.use("/admin", authMiddlewareChecker(RoleEnum.ADMIN), AdminRouter);
 router.use(
-  "/user/register",
-  FileUploadMiddleware.upload("company_logo", true),
-  FileUploadMiddleware.upload("company_license", true),
-  async (req, res) => {
-    let company = Company.create(req.body);
-    let savedCompany = await Company.save(company);
-    res.send(savedCompany);
-  }
+  "/user/company",
+  authMiddlewareChecker(RoleEnum.USER),
+  CompanyRouter
 );
 
-router.use("/admin/companies", async (req, res) => {
-  let companies = await Company.find();
-  res.send(companies);
-});
+router.get("/login", async (req, res) => {
+  const { user_name, password } = req.body;
 
-router.use("/admin/companies/:company_id", async (req, res) => {
-  let company_id = req.params.company_id;
-
-  let company = await Company.findOne({
+  let user = await User.findOne({
     where: {
-      id: company_id,
+      user_name: user_name,
     },
   });
-  res.send(company);
-});
 
-router.use("/admin/companies/:company_id/:status", async (req, res) => {
-  let company_id = req.params.company_id;
-  let status = req.params.status;
-
-  let company = await Company.findOne({
-    where: {
-      id: company_id,
-    },
-  });
-  company.status = status as CompanyStatus;
-
-  res.send(await Company.save(company));
+  if (user) {
+    bcrypt.compare(password, user.password, function (err, result) {
+      if (result) {
+        var token = jwt.sign(
+          {
+            role: user.role,
+            username: user.user_name,
+            created_at: user.created_at,
+          },
+          "E%%im+GB8T"
+        );
+        sendSuccess(res, "Login Successful", token);
+      } else {
+        sendBadRequest(res, "Invalid credentials");
+      }
+    });
+  } else {
+    sendBadRequest(res, "User not found");
+  }
 });
 
 export { router as RouterInitalizor };

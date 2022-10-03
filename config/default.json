@@ -1,11 +1,11 @@
 {
   "dbConfig": {
     "type": "mysql",
-    "host": "localhost",
+    "host": "139.162.197.216",
     "port": 3306,
-    "username": "cas",
-    "password": "GQBjzJdepmwA9ty",
-    "database": "cas",
+    "username": "openflowsoftware_cas",
+    "password": "9ucZkc3aqq3eAVN",
+    "database": "openflowsoftware_cas",
     "synchronize": true,
     "logging": false,
     "entities": ["src/entity/**/*"],

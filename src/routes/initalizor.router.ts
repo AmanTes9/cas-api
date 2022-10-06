@@ -28,7 +28,7 @@ router.get("/", (req, res) => {
   sendSuccess(res, "APP Base Route");
 });
 
-router.use("/admin", authMiddlewareChecker(RoleEnum.ADMIN), AdminRouter);
+router.use("/admin", AdminRouter);
 router.use(
   "/user/company",
   authMiddlewareChecker(RoleEnum.USER),

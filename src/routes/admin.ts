@@ -10,11 +10,20 @@ import {
   sendNotFound,
   sendSuccess,
 } from "../utils/response..util";
+import { Certificate } from "crypto";
+import { User_Certificate } from "../entity/certificate.entity";
 const router = express.Router();
 
 router.get("/company", async (req, res) => {
   let company = await Institutions.find();
   sendSuccess(res, "List of company", company);
+});
+
+router.get("/certificate", async (req, res) => {
+  let company = await User_Certificate.find({
+    relations: ["provider"],
+  });
+  sendSuccess(res, "List of certificate", company);
 });
 router.get("/user", async (req, res) => {
   let users = await User.find({
@@ -35,7 +44,11 @@ router.post("/company/status", async (req, res) => {
     try {
       if (Object.values(CompanyStatus).includes(status)) {
         company.status = status as CompanyStatus;
-        sendSuccess(res, "Company status updated", await Institutions.save(company));
+        sendSuccess(
+          res,
+          "Company status updated",
+          await Institutions.save(company)
+        );
       } else {
         sendNotFound(res, "Status not found");
       }

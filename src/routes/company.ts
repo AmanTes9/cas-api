@@ -5,9 +5,15 @@ import * as bcrypt from "bcrypt";
 import { Institutions, CompanyStatus } from "../entity/companies.entity";
 import { User } from "../entity/user.entity";
 import { FileUploadMiddleware } from "../middlewares/upload/fileupload.middelware";
-import { sendBadRequest, sendSuccess } from "../utils/response..util";
-import { Certificate } from "crypto";
-import { User_Certificate } from "../entity/certificate.entity";
+import {
+  sendBadRequest,
+  sendNotFound,
+  sendSuccess,
+} from "../utils/response..util";
+import {
+  CertificateStatus,
+  User_Certificate,
+} from "../entity/certificate.entity";
 const router = express.Router();
 
 router.use(
@@ -57,6 +63,45 @@ router.use(
   }
 );
 
+router.post("/certificate/status", async (req, res) => {
+  const { status, id } = req.body;
+  let user = await User.findOne({
+    where: {
+      user_name: req.body.user_name,
+    },
+  });
+
+  if (user) {
+    let institution = await Institutions.findOne({
+      where: {
+        user,
+      },
+    });
+
+    let certificate = await User_Certificate.findOne({
+      where: {
+        id,
+        provider: institution,
+      },
+    });
+
+    if (certificate) {
+      if (Object.values(CertificateStatus).includes(status)) {
+        certificate.status = status as CertificateStatus;
+        sendSuccess(
+          res,
+          "Certificate status updated",
+          await User_Certificate.save(certificate)
+        );
+      } else {
+        sendNotFound(res, "Status not found");
+      }
+    } else {
+      sendNotFound(res, "Certificate not found");
+    }
+  }
+});
+
 router.post(
   "/certificate",
   FileUploadMiddleware.upload("image", false),
@@ -89,5 +134,61 @@ router.post(
     }
   }
 );
+
+router.get("/certificate", async (req, res) => {
+  let user = await User.findOne({
+    where: {
+      user_name: req.body.user_name,
+    },
+  });
+
+  if (user) {
+    let institution = await Institutions.findOne({
+      where: {
+        user,
+      },
+    });
+
+    sendSuccess(
+      res,
+      "Certificate created",
+      await User_Certificate.find({
+        where: {
+          provider: institution,
+        },
+      })
+    );
+  } else {
+    sendBadRequest(res, "User not found");
+  }
+});
+router.get("/certificate/:id", async (req, res) => {
+  let user = await User.findOne({
+    where: {
+      user_name: req.body.user_name,
+    },
+  });
+
+  if (user) {
+    let institution = await Institutions.findOne({
+      where: {
+        user,
+      },
+    });
+
+    sendSuccess(
+      res,
+      "Certificate created",
+      await User_Certificate.find({
+        where: {
+          id: req.params.id,
+          provider: institution,
+        },
+      })
+    );
+  } else {
+    sendBadRequest(res, "User not found");
+  }
+});
 
 export { router as CompanyRouter };

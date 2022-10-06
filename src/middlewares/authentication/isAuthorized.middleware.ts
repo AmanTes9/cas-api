@@ -10,14 +10,16 @@ export function authMiddlewareChecker(role: RoleEnum) {
     if (token) {
       try {
         var decoded = jwt.verify(token, "E%%im+GB8T");
-        req.body.user_name = decoded.user_name;
+        console.log(decoded);
+        req.body.user_name = decoded.username;
         req.body.role = decoded.role;
         if ((decoded.role as RoleEnum) == role) {
           next();
+        } else {
+          res.status(400).json({
+            message: "Permission denied",
+          });
         }
-        res.status(400).json({
-          message: "Permission denied",
-        });
       } catch (err) {
         res.status(400).json({
           message: "Invalid token",
@@ -28,7 +30,5 @@ export function authMiddlewareChecker(role: RoleEnum) {
         message: "token is required",
       });
     }
-
-    next();
   };
 }

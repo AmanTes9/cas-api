@@ -8,9 +8,8 @@ import {
 } from "typeorm";
 import { Institutions } from "./companies.entity";
 
-export enum CompanyStatus {
-  PENDING = "Pending",
-  ACCEPTED = "Accepted",
+export enum CertificateStatus {
+  ACTIVE = "Active",
   BLOCKED = "Blocked",
 }
 
@@ -40,6 +39,13 @@ export class User_Certificate extends BaseEntity {
 
   @Column()
   image: string;
+
+  @Column({
+    enum: CertificateStatus,
+    default: CertificateStatus.ACTIVE,
+    type: "enum",
+  })
+  status: CertificateStatus;
 
   @Column()
   issued_date: string;

@@ -78,6 +78,7 @@ var user_entity_1 = require("../entity/user.entity");
 var fileupload_middelware_1 = require("../middlewares/upload/fileupload.middelware");
 var response__util_1 = require("../utils/response..util");
 var certificate_entity_1 = require("../entity/certificate.entity");
+var isAuthorized_middleware_1 = require("../middlewares/authentication/isAuthorized.middleware");
 var router = express.Router();
 exports.CompanyRouter = router;
 router.use("/register", fileupload_middelware_1.FileUploadMiddleware.upload("company_logo", true), fileupload_middelware_1.FileUploadMiddleware.upload("company_license", true), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
@@ -128,7 +129,57 @@ router.use("/register", fileupload_middelware_1.FileUploadMiddleware.upload("com
         return [2 /*return*/];
     });
 }); });
-router.post("/certificate", fileupload_middelware_1.FileUploadMiddleware.upload("image", false), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+router.post("/certificate/status", (0, isAuthorized_middleware_1.authMiddlewareChecker)(user_entity_1.RoleEnum.USER), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, status, id, user, institution, certificate, _b, _c;
+    return __generator(this, function (_d) {
+        switch (_d.label) {
+            case 0:
+                _a = req.body, status = _a.status, id = _a.id;
+                return [4 /*yield*/, user_entity_1.User.findOne({
+                        where: {
+                            user_name: req.body.user_name,
+                        },
+                    })];
+            case 1:
+                user = _d.sent();
+                if (!user) return [3 /*break*/, 8];
+                return [4 /*yield*/, companies_entity_1.Institutions.findOne({
+                        where: {
+                            user: user,
+                        },
+                    })];
+            case 2:
+                institution = _d.sent();
+                return [4 /*yield*/, certificate_entity_1.User_Certificate.findOne({
+                        where: {
+                            id: id,
+                            provider: institution,
+                        },
+                    })];
+            case 3:
+                certificate = _d.sent();
+                if (!certificate) return [3 /*break*/, 7];
+                if (!Object.values(certificate_entity_1.CertificateStatus).includes(status)) return [3 /*break*/, 5];
+                certificate.status = status;
+                _b = response__util_1.sendSuccess;
+                _c = [res,
+                    "Certificate status updated"];
+                return [4 /*yield*/, certificate_entity_1.User_Certificate.save(certificate)];
+            case 4:
+                _b.apply(void 0, _c.concat([_d.sent()]));
+                return [3 /*break*/, 6];
+            case 5:
+                (0, response__util_1.sendNotFound)(res, "Status not found");
+                _d.label = 6;
+            case 6: return [3 /*break*/, 8];
+            case 7:
+                (0, response__util_1.sendNotFound)(res, "Certificate not found");
+                _d.label = 8;
+            case 8: return [2 /*return*/];
+        }
+    });
+}); });
+router.post("/certificate", (0, isAuthorized_middleware_1.authMiddlewareChecker)(user_entity_1.RoleEnum.USER), fileupload_middelware_1.FileUploadMiddleware.upload("image", false), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var user, institution, certificate, _a, _b;
     return __generator(this, function (_c) {
         switch (_c.label) {
@@ -148,10 +199,86 @@ router.post("/certificate", fileupload_middelware_1.FileUploadMiddleware.upload(
             case 2:
                 institution = _c.sent();
                 certificate = certificate_entity_1.User_Certificate.create(__assign(__assign({}, req.body), { provider: institution }));
+                console.log(req.body);
                 _a = response__util_1.sendSuccess;
                 _b = [res,
                     "Certificate created"];
                 return [4 /*yield*/, certificate_entity_1.User_Certificate.save(certificate)];
+            case 3:
+                _a.apply(void 0, _b.concat([_c.sent()]));
+                return [3 /*break*/, 5];
+            case 4:
+                (0, response__util_1.sendBadRequest)(res, "User not found");
+                _c.label = 5;
+            case 5: return [2 /*return*/];
+        }
+    });
+}); });
+router.get("/certificate", (0, isAuthorized_middleware_1.authMiddlewareChecker)(user_entity_1.RoleEnum.USER), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var user, institution, _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0: return [4 /*yield*/, user_entity_1.User.findOne({
+                    where: {
+                        user_name: req.body.user_name,
+                    },
+                })];
+            case 1:
+                user = _c.sent();
+                if (!user) return [3 /*break*/, 4];
+                return [4 /*yield*/, companies_entity_1.Institutions.findOne({
+                        where: {
+                            user: user,
+                        },
+                    })];
+            case 2:
+                institution = _c.sent();
+                _a = response__util_1.sendSuccess;
+                _b = [res,
+                    "Certificate created"];
+                return [4 /*yield*/, certificate_entity_1.User_Certificate.find({
+                        where: {
+                            provider: institution,
+                        },
+                    })];
+            case 3:
+                _a.apply(void 0, _b.concat([_c.sent()]));
+                return [3 /*break*/, 5];
+            case 4:
+                (0, response__util_1.sendBadRequest)(res, "User not found");
+                _c.label = 5;
+            case 5: return [2 /*return*/];
+        }
+    });
+}); });
+router.get("/certificate/:id", (0, isAuthorized_middleware_1.authMiddlewareChecker)(user_entity_1.RoleEnum.USER), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var user, institution, _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0: return [4 /*yield*/, user_entity_1.User.findOne({
+                    where: {
+                        user_name: req.body.user_name,
+                    },
+                })];
+            case 1:
+                user = _c.sent();
+                if (!user) return [3 /*break*/, 4];
+                return [4 /*yield*/, companies_entity_1.Institutions.findOne({
+                        where: {
+                            user: user,
+                        },
+                    })];
+            case 2:
+                institution = _c.sent();
+                _a = response__util_1.sendSuccess;
+                _b = [res,
+                    "Certificate created"];
+                return [4 /*yield*/, certificate_entity_1.User_Certificate.find({
+                        where: {
+                            id: req.params.id,
+                            provider: institution,
+                        },
+                    })];
             case 3:
                 _a.apply(void 0, _b.concat([_c.sent()]));
                 return [3 /*break*/, 5];

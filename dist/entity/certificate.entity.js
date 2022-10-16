@@ -24,15 +24,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User_Certificate = exports.CompanyStatus = void 0;
+exports.User_Certificate = exports.CertificateStatus = void 0;
 var typeorm_1 = require("typeorm");
 var companies_entity_1 = require("./companies.entity");
-var CompanyStatus;
-(function (CompanyStatus) {
-    CompanyStatus["PENDING"] = "Pending";
-    CompanyStatus["ACCEPTED"] = "Accepted";
-    CompanyStatus["BLOCKED"] = "Blocked";
-})(CompanyStatus = exports.CompanyStatus || (exports.CompanyStatus = {}));
+var CertificateStatus;
+(function (CertificateStatus) {
+    CertificateStatus["ACTIVE"] = "Active";
+    CertificateStatus["BLOCKED"] = "Blocked";
+})(CertificateStatus = exports.CertificateStatus || (exports.CertificateStatus = {}));
 var User_Certificate = /** @class */ (function (_super) {
     __extends(User_Certificate, _super);
     function User_Certificate() {
@@ -70,6 +69,14 @@ var User_Certificate = /** @class */ (function (_super) {
         (0, typeorm_1.Column)(),
         __metadata("design:type", String)
     ], User_Certificate.prototype, "image", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({
+            enum: CertificateStatus,
+            default: CertificateStatus.ACTIVE,
+            type: "enum",
+        }),
+        __metadata("design:type", String)
+    ], User_Certificate.prototype, "status", void 0);
     __decorate([
         (0, typeorm_1.Column)(),
         __metadata("design:type", String)

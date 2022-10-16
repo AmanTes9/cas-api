@@ -72,7 +72,7 @@ var response__util_1 = require("../utils/response..util");
 var company_1 = require("./company");
 var user_entity_1 = require("../entity/user.entity");
 var admin_1 = require("./admin");
-var isAuthorized_middleware_1 = require("../middlewares/authentication/isAuthorized.middleware");
+var certificate_entity_1 = require("../entity/certificate.entity");
 var router = express.Router();
 exports.RouterInitalizor = router;
 var jwt = require("jsonwebtoken");
@@ -85,9 +85,31 @@ router.use(routes_1.Routes.config.imagePath, express.static(uploadPath));
 router.get("/", function (req, res) {
     (0, response__util_1.sendSuccess)(res, "APP Base Route");
 });
-router.use("/admin", (0, isAuthorized_middleware_1.authMiddlewareChecker)(user_entity_1.RoleEnum.ADMIN), admin_1.AdminRouter);
-router.use("/user/company", (0, isAuthorized_middleware_1.authMiddlewareChecker)(user_entity_1.RoleEnum.USER), company_1.CompanyRouter);
-router.get("/login", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+router.get("/check/:id", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var id, certificate;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                id = req.params.id;
+                return [4 /*yield*/, certificate_entity_1.User_Certificate.findOne({
+                        where: {
+                            id: id,
+                        },
+                        relations: ["provider"],
+                    })];
+            case 1:
+                certificate = _a.sent();
+                if (certificate)
+                    (0, response__util_1.sendSuccess)(res, "User Certificate", certificate);
+                else
+                    (0, response__util_1.sendNotFound)(res, "Certificate not found");
+                return [2 /*return*/];
+        }
+    });
+}); });
+router.use("/admin", admin_1.AdminRouter);
+router.use("/user/company", company_1.CompanyRouter);
+router.post("/login", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, user_name, password, user;
     return __generator(this, function (_b) {
         switch (_b.label) {

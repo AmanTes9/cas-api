@@ -4,13 +4,19 @@ import fileUpload from "express-fileupload";
 import path from "path";
 
 import * as bcrypt from "bcrypt";
-import { sendBadRequest, sendSuccess } from "../utils/response..util";
+import {
+  sendBadRequest,
+  sendNotFound,
+  sendSuccess,
+} from "../utils/response..util";
 import { Institutions, CompanyStatus } from "../entity/companies.entity";
 import { FileUploadMiddleware } from "../middlewares/upload/fileupload.middelware";
 import { CompanyRouter } from "./company";
 import { RoleEnum, User } from "../entity/user.entity";
 import { AdminRouter } from "./admin";
 import { authMiddlewareChecker } from "../middlewares/authentication/isAuthorized.middleware";
+import { Certificate } from "crypto";
+import { User_Certificate } from "../entity/certificate.entity";
 const router = express.Router();
 
 var jwt = require("jsonwebtoken");
@@ -27,15 +33,22 @@ router.use(Routes.config.imagePath, express.static(uploadPath));
 router.get("/", (req, res) => {
   sendSuccess(res, "APP Base Route");
 });
+router.get("/check/:id", async (req, res) => {
+  let id = req.params.id;
+  let certificate = await User_Certificate.findOne({
+    where: {
+      id,
+    },
+    relations: ["provider"],
+  });
+  if (certificate) sendSuccess(res, "User Certificate", certificate);
+  else sendNotFound(res, "Certificate not found");
+});
 
 router.use("/admin", AdminRouter);
-router.use(
-  "/user/company",
-  authMiddlewareChecker(RoleEnum.USER),
-  CompanyRouter
-);
+router.use("/user/company", CompanyRouter);
 
-router.get("/login", async (req, res) => {
+router.post("/login", async (req, res) => {
   const { user_name, password } = req.body;
 
   let user = await User.findOne({

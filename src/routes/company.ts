@@ -3,7 +3,7 @@ import fileUpload from "express-fileupload";
 
 import * as bcrypt from "bcrypt";
 import { Institutions, CompanyStatus } from "../entity/companies.entity";
-import { User } from "../entity/user.entity";
+import { RoleEnum, User } from "../entity/user.entity";
 import { FileUploadMiddleware } from "../middlewares/upload/fileupload.middelware";
 import {
   sendBadRequest,
@@ -14,6 +14,7 @@ import {
   CertificateStatus,
   User_Certificate,
 } from "../entity/certificate.entity";
+import { authMiddlewareChecker } from "../middlewares/authentication/isAuthorized.middleware";
 const router = express.Router();
 
 router.use(
@@ -63,47 +64,53 @@ router.use(
   }
 );
 
-router.post("/certificate/status", async (req, res) => {
-  const { status, id } = req.body;
-  let user = await User.findOne({
-    where: {
-      user_name: req.body.user_name,
-    },
-  });
-
-  if (user) {
-    let institution = await Institutions.findOne({
+router.post(
+  "/certificate/status",
+  authMiddlewareChecker(RoleEnum.USER),
+  async (req, res) => {
+    const { status, id } = req.body;
+    let user = await User.findOne({
       where: {
-        user,
+        user_name: req.body.user_name,
       },
     });
 
-    let certificate = await User_Certificate.findOne({
-      where: {
-        id,
-        provider: institution,
-      },
-    });
+    if (user) {
+      let institution = await Institutions.findOne({
+        where: {
+          user,
+        },
+      });
 
-    if (certificate) {
-      if (Object.values(CertificateStatus).includes(status)) {
-        certificate.status = status as CertificateStatus;
-        sendSuccess(
-          res,
-          "Certificate status updated",
-          await User_Certificate.save(certificate)
-        );
+      let certificate = await User_Certificate.findOne({
+        where: {
+          id,
+          provider: institution,
+        },
+      });
+
+      if (certificate) {
+        if (Object.values(CertificateStatus).includes(status)) {
+          certificate.status = status as CertificateStatus;
+          sendSuccess(
+            res,
+            "Certificate status updated",
+            await User_Certificate.save(certificate)
+          );
+        } else {
+          sendNotFound(res, "Status not found");
+        }
       } else {
-        sendNotFound(res, "Status not found");
+        sendNotFound(res, "Certificate not found");
       }
-    } else {
-      sendNotFound(res, "Certificate not found");
     }
   }
-});
+);
 
 router.post(
   "/certificate",
+
+  authMiddlewareChecker(RoleEnum.USER),
   FileUploadMiddleware.upload("image", false),
   async (req, res) => {
     let user = await User.findOne({
@@ -124,6 +131,8 @@ router.post(
         provider: institution,
       });
 
+      console.log(req.body);
+
       sendSuccess(
         res,
         "Certificate created",
@@ -135,60 +144,68 @@ router.post(
   }
 );
 
-router.get("/certificate", async (req, res) => {
-  let user = await User.findOne({
-    where: {
-      user_name: req.body.user_name,
-    },
-  });
-
-  if (user) {
-    let institution = await Institutions.findOne({
+router.get(
+  "/certificate",
+  authMiddlewareChecker(RoleEnum.USER),
+  async (req, res) => {
+    let user = await User.findOne({
       where: {
-        user,
+        user_name: req.body.user_name,
       },
     });
 
-    sendSuccess(
-      res,
-      "Certificate created",
-      await User_Certificate.find({
+    if (user) {
+      let institution = await Institutions.findOne({
         where: {
-          provider: institution,
+          user,
         },
-      })
-    );
-  } else {
-    sendBadRequest(res, "User not found");
-  }
-});
-router.get("/certificate/:id", async (req, res) => {
-  let user = await User.findOne({
-    where: {
-      user_name: req.body.user_name,
-    },
-  });
+      });
 
-  if (user) {
-    let institution = await Institutions.findOne({
+      sendSuccess(
+        res,
+        "Certificate created",
+        await User_Certificate.find({
+          where: {
+            provider: institution,
+          },
+        })
+      );
+    } else {
+      sendBadRequest(res, "User not found");
+    }
+  }
+);
+router.get(
+  "/certificate/:id",
+  authMiddlewareChecker(RoleEnum.USER),
+  async (req, res) => {
+    let user = await User.findOne({
       where: {
-        user,
+        user_name: req.body.user_name,
       },
     });
 
-    sendSuccess(
-      res,
-      "Certificate created",
-      await User_Certificate.find({
+    if (user) {
+      let institution = await Institutions.findOne({
         where: {
-          id: req.params.id,
-          provider: institution,
+          user,
         },
-      })
-    );
-  } else {
-    sendBadRequest(res, "User not found");
+      });
+
+      sendSuccess(
+        res,
+        "Certificate created",
+        await User_Certificate.find({
+          where: {
+            id: req.params.id,
+            provider: institution,
+          },
+        })
+      );
+    } else {
+      sendBadRequest(res, "User not found");
+    }
   }
-});
+);
 
 export { router as CompanyRouter };

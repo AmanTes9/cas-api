@@ -47,14 +47,17 @@ function authMiddlewareChecker(role) {
             if (token) {
                 try {
                     decoded = jwt.verify(token, "E%%im+GB8T");
-                    req.body.user_name = decoded.user_name;
+                    console.log(decoded);
+                    req.body.user_name = decoded.username;
                     req.body.role = decoded.role;
                     if (decoded.role == role) {
                         next();
                     }
-                    res.status(400).json({
-                        message: "Permission denied",
-                    });
+                    else {
+                        res.status(400).json({
+                            message: "Permission denied",
+                        });
+                    }
                 }
                 catch (err) {
                     res.status(400).json({
@@ -67,7 +70,6 @@ function authMiddlewareChecker(role) {
                     message: "token is required",
                 });
             }
-            next();
             return [2 /*return*/];
         });
     }); };

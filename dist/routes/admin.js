@@ -64,6 +64,7 @@ var express = __importStar(require("express"));
 var companies_entity_1 = require("../entity/companies.entity");
 var user_entity_1 = require("../entity/user.entity");
 var response__util_1 = require("../utils/response..util");
+var certificate_entity_1 = require("../entity/certificate.entity");
 var router = express.Router();
 exports.AdminRouter = router;
 router.get("/company", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
@@ -74,6 +75,20 @@ router.get("/company", function (req, res) { return __awaiter(void 0, void 0, vo
             case 1:
                 company = _a.sent();
                 (0, response__util_1.sendSuccess)(res, "List of company", company);
+                return [2 /*return*/];
+        }
+    });
+}); });
+router.get("/certificate", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var company;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, certificate_entity_1.User_Certificate.find({
+                    relations: ["provider"],
+                })];
+            case 1:
+                company = _a.sent();
+                (0, response__util_1.sendSuccess)(res, "List of certificate", company);
                 return [2 /*return*/];
         }
     });
@@ -112,7 +127,8 @@ router.post("/company/status", function (req, res) { return __awaiter(void 0, vo
                 if (!Object.values(companies_entity_1.CompanyStatus).includes(status)) return [3 /*break*/, 4];
                 company.status = status;
                 _b = response__util_1.sendSuccess;
-                _c = [res, "Company status updated"];
+                _c = [res,
+                    "Company status updated"];
                 return [4 /*yield*/, companies_entity_1.Institutions.save(company)];
             case 3:
                 _b.apply(void 0, _c.concat([_d.sent()]));

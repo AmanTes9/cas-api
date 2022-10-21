@@ -138,11 +138,12 @@ router.post("/certificate/status", (0, isAuthorized_middleware_1.authMiddlewareC
                 return [4 /*yield*/, user_entity_1.User.findOne({
                         where: {
                             user_name: req.body.user_name,
+                            status: user_entity_1.User_status.ACTIVE,
                         },
                     })];
             case 1:
                 user = _d.sent();
-                if (!user) return [3 /*break*/, 8];
+                if (!user) return [3 /*break*/, 9];
                 return [4 /*yield*/, companies_entity_1.Institutions.findOne({
                         where: {
                             user: user,
@@ -175,7 +176,11 @@ router.post("/certificate/status", (0, isAuthorized_middleware_1.authMiddlewareC
             case 7:
                 (0, response__util_1.sendNotFound)(res, "Certificate not found");
                 _d.label = 8;
-            case 8: return [2 /*return*/];
+            case 8: return [3 /*break*/, 10];
+            case 9:
+                (0, response__util_1.sendNotFound)(res, "User not approved");
+                _d.label = 10;
+            case 10: return [2 /*return*/];
         }
     });
 }); });
@@ -186,18 +191,21 @@ router.post("/certificate", (0, isAuthorized_middleware_1.authMiddlewareChecker)
             case 0: return [4 /*yield*/, user_entity_1.User.findOne({
                     where: {
                         user_name: req.body.user_name,
+                        status: user_entity_1.User_status.ACTIVE,
                     },
                 })];
             case 1:
                 user = _c.sent();
-                if (!user) return [3 /*break*/, 4];
+                if (!user) return [3 /*break*/, 6];
                 return [4 /*yield*/, companies_entity_1.Institutions.findOne({
                         where: {
                             user: user,
+                            status: companies_entity_1.CompanyStatus.ACCEPTED,
                         },
                     })];
             case 2:
                 institution = _c.sent();
+                if (!institution) return [3 /*break*/, 4];
                 certificate = certificate_entity_1.User_Certificate.create(__assign(__assign({}, req.body), { provider: institution }));
                 console.log(req.body);
                 _a = response__util_1.sendSuccess;
@@ -208,9 +216,60 @@ router.post("/certificate", (0, isAuthorized_middleware_1.authMiddlewareChecker)
                 _a.apply(void 0, _b.concat([_c.sent()]));
                 return [3 /*break*/, 5];
             case 4:
-                (0, response__util_1.sendBadRequest)(res, "User not found");
+                (0, response__util_1.sendBadRequest)(res, "Permission denied");
                 _c.label = 5;
-            case 5: return [2 /*return*/];
+            case 5: return [3 /*break*/, 7];
+            case 6:
+                (0, response__util_1.sendBadRequest)(res, "Permission denied");
+                _c.label = 7;
+            case 7: return [2 /*return*/];
+        }
+    });
+}); });
+router.put("/certificate/:id", (0, isAuthorized_middleware_1.authMiddlewareChecker)(user_entity_1.RoleEnum.USER), fileupload_middelware_1.FileUploadMiddleware.upload("image", false), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var user, institution, userCertificate, _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                console.log(req.body);
+                return [4 /*yield*/, user_entity_1.User.findOne({
+                        where: {
+                            user_name: req.body.user_name,
+                        },
+                    })];
+            case 1:
+                user = _c.sent();
+                if (!user) return [3 /*break*/, 6];
+                return [4 /*yield*/, companies_entity_1.Institutions.findOne({
+                        where: {
+                            user: user,
+                        },
+                    })];
+            case 2:
+                institution = _c.sent();
+                return [4 /*yield*/, certificate_entity_1.User_Certificate.findOne({
+                        where: {
+                            id: req.params.id,
+                            provider: institution,
+                        },
+                    })];
+            case 3:
+                userCertificate = _c.sent();
+                if (!userCertificate) return [3 /*break*/, 5];
+                delete req.body["role"];
+                delete req.body["user_name"];
+                Object.keys(req.body).forEach(function (k) { return !!!req.body[k] && delete req.body[k]; });
+                _a = response__util_1.sendSuccess;
+                _b = [res,
+                    "Certificate updated successfully "];
+                return [4 /*yield*/, certificate_entity_1.User_Certificate.update(req.params.id, __assign({}, req.body))];
+            case 4:
+                _a.apply(void 0, _b.concat([_c.sent()]));
+                return [3 /*break*/, 6];
+            case 5:
+                (0, response__util_1.sendNotFound)(res, "Certificate not found");
+                _c.label = 6;
+            case 6: return [2 /*return*/];
         }
     });
 }); });

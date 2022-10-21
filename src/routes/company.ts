@@ -3,7 +3,7 @@ import fileUpload from "express-fileupload";
 
 import * as bcrypt from "bcrypt";
 import { Institutions, CompanyStatus } from "../entity/companies.entity";
-import { RoleEnum, User } from "../entity/user.entity";
+import { RoleEnum, User, User_status } from "../entity/user.entity";
 import { FileUploadMiddleware } from "../middlewares/upload/fileupload.middelware";
 import {
   sendBadRequest,
@@ -72,6 +72,7 @@ router.post(
     let user = await User.findOne({
       where: {
         user_name: req.body.user_name,
+        status: User_status.ACTIVE,
       },
     });
 
@@ -103,16 +104,59 @@ router.post(
       } else {
         sendNotFound(res, "Certificate not found");
       }
+    } else {
+      sendNotFound(res, "User not approved");
     }
   }
 );
 
 router.post(
   "/certificate",
-
   authMiddlewareChecker(RoleEnum.USER),
   FileUploadMiddleware.upload("image", false),
   async (req, res) => {
+    let user = await User.findOne({
+      where: {
+        user_name: req.body.user_name,
+        status: User_status.ACTIVE,
+      },
+    });
+
+    if (user) {
+      let institution = await Institutions.findOne({
+        where: {
+          user,
+          status: CompanyStatus.ACCEPTED,
+        },
+      });
+      if (institution) {
+        let certificate = User_Certificate.create({
+          ...req.body,
+          provider: institution,
+        });
+
+        console.log(req.body);
+
+        sendSuccess(
+          res,
+          "Certificate created",
+          await User_Certificate.save(certificate)
+        );
+      } else {
+        sendBadRequest(res, "Permission denied");
+      }
+    } else {
+      sendBadRequest(res, "Permission denied");
+    }
+  }
+);
+
+router.put(
+  "/certificate/:id",
+  authMiddlewareChecker(RoleEnum.USER),
+  FileUploadMiddleware.upload("image", false),
+  async (req, res) => {
+    console.log(req.body);
     let user = await User.findOne({
       where: {
         user_name: req.body.user_name,
@@ -126,20 +170,29 @@ router.post(
         },
       });
 
-      let certificate = User_Certificate.create({
-        ...req.body,
-        provider: institution,
+      let userCertificate = await User_Certificate.findOne({
+        where: {
+          id: req.params.id,
+          provider: institution,
+        },
       });
 
-      console.log(req.body);
-
-      sendSuccess(
-        res,
-        "Certificate created",
-        await User_Certificate.save(certificate)
-      );
-    } else {
-      sendBadRequest(res, "User not found");
+      if (userCertificate) {
+        delete req.body["role"];
+        delete req.body["user_name"];
+        Object.keys(req.body).forEach(
+          (k) => !!!req.body[k] && delete req.body[k]
+        );
+        sendSuccess(
+          res,
+          "Certificate updated successfully ",
+          await User_Certificate.update(req.params.id, {
+            ...req.body,
+          })
+        );
+      } else {
+        sendNotFound(res, "Certificate not found");
+      }
     }
   }
 );
